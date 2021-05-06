@@ -1,0 +1,35 @@
+---
+# tasks file for roles/ssh_key_exchange
+- name: SSH KeyGen command
+  tags: run
+  shell: > 
+    ssh-keygen -q -b 2048 -t rsa -N "" -C "creating SSH" -f ~/.ssh/id_rsa
+    creates="~/.ssh/id_rsa"
+
+- name: Fetch the keyfile from one server to another
+  tags: run
+  fetch: 
+    src: "~/.ssh/id_rsa.pub"
+    dest: "buffer/{{inventory_hostname}}-id_rsa.pub"
+    flat: yes
+
+- name: Copy the key add to authorized_keys using Ansible module
+  tags: run
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file','buffer/{{item}}-id_rsa.pub')}}"
+  with_items: 
+    - "{{ groups['servers']}}"
+
+- name: Permit root login
+  tags: run
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regex: '^PermitRootLogin'
+    line: PermitRootLogin yes
+
+- name: restart sshd service
+  systemd:
+    name: sshd
+    state: restarted
