@@ -18,3 +18,10 @@ variable "machine_type" {
   type = string
 }
 
+variable "network_tier" {
+  type = string
+}
+
+variable "test_name" {
+  type = string
+}

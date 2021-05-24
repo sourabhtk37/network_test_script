@@ -5,3 +5,6 @@
     
 - name: gather facts
   setup:
+
+- debug:
+    msg: "{{ test_name }}"

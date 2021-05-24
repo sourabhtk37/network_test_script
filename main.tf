@@ -20,8 +20,12 @@ resource "random_id" "instance_id" {
   byte_length = 4
 }
 
+resource "google_compute_project_default_network_tier" "project-tier" {
+  network_tier = var.network_tier
+}
+
 resource "google_compute_instance" "test" {
-  name                      = "tks-test-net-${var.machine_type}-${var.zone1}-${var.zone2}"
+  name = "tks-${var.machine_type}-${var.zone1}-${var.zone2}-${random_id.instance_id.hex}-test"
   machine_type              = var.machine_type
   allow_stopping_for_update = "true"
   zone                      = var.zone1
@@ -42,7 +46,7 @@ resource "google_compute_instance" "test" {
 
 
 resource "google_compute_instance" "dut" {
-  name         = "tks-dut-net-${var.machine_type}-${var.zone1}-${var.zone2}"
+  name         = "tks-${var.machine_type}-${var.zone1}-${var.zone2}-${random_id.instance_id.hex}-dut"
   machine_type = var.machine_type
   allow_stopping_for_update = "true"
   zone = var.zone2
@@ -88,7 +92,7 @@ resource "null_resource" "run-playbook" {
     always_run = timestamp()
   }
   provisioner "local-exec" {
-    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i hosts-'${random_id.instance_id.hex}'.inv pbench_agent_install.yml"
+    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i hosts-'${random_id.instance_id.hex}'.inv pbench_agent_install.yml -e 'test_name=${var.test_name}'"
   }
   depends_on = [
     google_compute_instance.test,

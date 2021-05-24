@@ -18,6 +18,27 @@
   async: 500
   poll: 0
   run_once: true
+  when: test_name == "general"
+
+- name: Run 24Hr stream uperf and move results
+  tags: run
+  become_user: root
+  become_flags: "-i"
+  shell: nohup bash -c "pbench-uperf -t stream -r 86400 -m 16384 -p tcp -i 8 -C {{ groups['servers'][0] }} -S {{ groups['servers'][1] }} --samples=1 </dev/null >/dev/null 2>&1  && pbench-move-results </dev/null >/dev/null 2>&1"  &
+  async: 500
+  poll: 0
+  run_once: true
+  when: test_name == "stream"
+
+- name: Run 24Hr RR uperf and move results
+  tags: run
+  become_user: root
+  become_flags: "-i"
+  shell: nohup bash -c "pbench-uperf -t rr -r 86400 -m 64 -p tcp -i 1 -C {{ groups['servers'][0] }} -S {{ groups['servers'][1] }} --samples=1 </dev/null >/dev/null 2>&1  && pbench-move-results </dev/null >/dev/null 2>&1"  &
+  async: 500
+  poll: 0
+  run_once: true
+  when: test_name == "rr"
 
 - debug:
     msg: "pbench-uperf -t stream,rr -r 60 -m 64,16384 -p tcp -i 1,8,64 -C {{ groups['servers'][0] }} -S {{ groups['servers'][1] }} --max-stddev=10 && pbench-move-results"
